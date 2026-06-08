@@ -7,6 +7,8 @@
 #5 saving and repeating
 import torch
 from torch import nn #nn contains all the pytorch building block from nural network
+import matplotlib
+matplotlib.use('MACOSX')#this is important if u are on vs code use TkAgg if on windows 
 import matplotlib.pyplot as plt
 
 #data preparing and loading
@@ -41,3 +43,27 @@ print(f"traing x:  {len(x_train)}")
 print(f"traing y:  {len(y_train)}")
 print(f"testing x:  {len(y_test)}")
 print(f"testing y:  {len(y_test)}")
+
+#visualisation of tensor/numbers
+def plot_prediction(train_data= x_train,
+                    train_label=y_train,
+                    test_labels= y_test,
+                    test_data= x_test,
+                    prediction=None):
+    plt.figure(figsize=(10,7))
+
+    #plot training data in blue
+    plt.scatter(train_data, train_label, c="b", s=4, label= "training data")
+
+    #plot testing data in green ur choice
+    plt.scatter(test_data, test_labels, c='g', label= "test data")
+
+    #are there prediction
+    if prediction is not None:
+        plt.scatter(test_data, prediction, c= "red", label= "prediction data")
+    
+    #show the legends (can put a mirror too)
+    plt.legend(prop={"size":14})
+    plt.show()
+
+plot_prediction()
