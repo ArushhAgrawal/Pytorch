@@ -63,8 +63,9 @@ class LinearRegressionModel(nn.Module):#nn.Module- its the building block of pyt
     def forward(self, x: torch.tensor) -> torch.Tensor:#x is the training data
             return self.weights * x + self.bias #this is linear regression formula       
 #checking the content of our pytorch model
-#create a random seed
-
+#create a random seed(we used it so the output we get everytime is fixed not changing on everytime we run)
+torch.manual_seed(2)#changing manual seed values affect the predictions too
+ 
 #create subclass
 model_0 = LinearRegressionModel()
 
@@ -77,6 +78,58 @@ print(f"organised output {model_0.state_dict()}")
 with torch.inference_mode():#prediction=infrence not using  will not give any diffrence but later it will be usefull
     y_preds= model_0(x_test)
 
-print(y_preds)
-plot_prediction(prediction=y_preds)
+#print(y_preds)
+#plot_prediction(prediction=y_preds)
 
+#train model (to move the model from unknown parameters to known parameters)
+#to know how poor the model is we use loss/cost/criterion function
+#optimizer takes the handes onto loss and from that it tried to adjust the model parameter(the weight and bias)
+
+#setup loss function
+loss_fn=nn.L1Loss()#l1 is for mean abs error
+#setup optimizer
+optimizer= torch.optim.SGD(params=model_0.parameters(),
+                           lr=0.01) #learning rate 
+                           #SGD is a alogritm type build inside pytorch 
+
+#training and testing loop
+#steps- loop thorugh the data
+        #forward pass (this involves data moving thorugh our models forward() function) to make prediction on data
+        #caculate the loss (compare forward pass predcition to ground truth labels)
+        #optimiser zero grad
+        #loss backward - move backwards through the network to calculate the gradients of each of the parameter with repect to the loss
+        #optimizer step- use the optimizer to adjsut our models parameter to improve the loss
+#training loop
+epochs= 100
+
+for epoch in range(epochs):
+    #set the model to training mode(its set by default)
+    model_0.train()#sets all parameter  that requires gradient to require gradient
+    #model.eval()#turns off the gradient tracking
+    y_pred= model_0(x_train)
+    #calculate the loss
+    loss= loss_fn(y_pred,y_train)#prediction then labels calculate the mae betweeen them
+    #print(f"loss:  {loss}")
+    #optimizer zero grad
+    optimizer.zero_grad()
+    #performs backpropagation on the loss with respect to the parameters of the model and computed the weight (requires grad=true for that)
+    loss.backward()
+    #step the optimizer (perform gradient descent)
+    optimizer.step() #by default how the optimizer changes will accumulate through the loop so.... we hvae to zero them above step 3 for the next iteration of loo p
+ 
+
+print(model_0.state_dict())
+with torch.inference_mode():
+   y_pred_new=model_0(x_test)
+#plot_prediction(prediction=y_pred_new)
+
+#testing loop
+model_0.eval()#turns of diffrent setting not needed during testing
+with torch.inference_mode():#turns of gradient tracking
+
+    #do the forward pass
+    test_pred=model_0(x_test)
+    #calculate the loss
+    test_loss=loss_fn(test_pred,y_test)
+print(f"epoch: {epoch} |  loss: {loss}| test loss: {test_loss}")
+plot_prediction(prediction=test_pred)
