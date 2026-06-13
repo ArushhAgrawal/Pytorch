@@ -6,8 +6,8 @@ matplotlib.use('MacOSX')#this is important if u are on vs code use TkAgg if on w
 import matplotlib.pyplot as plt
 from pathlib import Path#required to save model in python
 
-weight= 0.7
-bias= 0.3
+weight= 0.3
+bias= 0.9
 
 #create data
 start=0
@@ -90,7 +90,7 @@ with torch.inference_mode():#prediction=infrence not using  will not give any di
 loss_fn=nn.L1Loss()#l1 is for mean abs error
 #setup optimizer
 optimizer= torch.optim.SGD(params=model_0.parameters(),
-                           lr=0.01) #learning rate 
+                           lr=0.0209) #learning rate 
                            #SGD is a alogritm type build inside pytorch 
 
 #training and testing loop
@@ -101,9 +101,10 @@ optimizer= torch.optim.SGD(params=model_0.parameters(),
         #loss backward - move backwards through the network to calculate the gradients of each of the parameter with repect to the loss
         #optimizer step- use the optimizer to adjsut our models parameter to improve the loss
 #training loop
-epochs= 100
+epochs= 500
 
 for epoch in range(epochs):
+    
     #set the model to training mode(its set by default)
     model_0.train()#sets all parameter  that requires gradient to require gradient
     #model.eval()#turns off the gradient tracking
@@ -121,32 +122,38 @@ for epoch in range(epochs):
 #to save and load the model
 
 #make model file and directory
-model_path=Path("models")
-model_path.mkdir(parents=True, exist_ok=True)
+#model_path=Path("models")
+#model_path.mkdir(parents=True, exist_ok=True)
 
 #create model save path
-model_name= "model_1.pt"
-model_save_path= model_path / model_name
+#model_name= "model_1.pt"
+#model_save_path= model_path / model_name
 
-torch.save(model_0.state_dict, model_save_path)#obj , save path. (state_dict is right apporch and more benificial in real world)
+#torch.save(model_0.state_dict, model_save_path)#obj , save path. (state_dict is right apporch and more benificial in real world)
 
 
-#print(model_0.state_dict())
-#with torch.inference_mode():
-   #y_pred_new=model_0(x_test)
-#plot_prediction(prediction=y_pred_new)
+# print(model_0.state_dict())
+# with torch.inference_mode():
+#    y_pred_new=model_0(x_test)
+# plot_prediction(prediction=y_pred_new)
 
 #testing loop
-model_0.eval()#turns of diffrent setting not needed during testing
-with torch.inference_mode():#turns of gradient tracking
+    model_0.eval()#turns of diffrent setting not needed during testing
+    with torch.inference_mode():#turns off gradient tracking
     #do the forward pass
-    test_pred=model_0(x_test)
+        test_pred=model_0(x_test)
     #calculate the loss
-    test_loss=loss_fn(test_pred,y_test)
+        test_loss=loss_fn(test_pred,y_test)
     
 
 print(f"epoch: {epoch} |  loss: {loss}| test loss: {test_loss}")
-print(model_0.state_dict())
 print(test_loss)
-#plot_prediction(prediction=test_pred)#visualisation
+print(model_0.state_dict())
+plot_prediction(prediction=test_pred)#visualisation
 
+#to load the model we have to instantiate a new instance of our model class
+#load_model_0= LinearRegressionModelV2()
+
+#load the saved state_dict of the model_0 (this will upd the new isntance with the updated model) 
+#load_model_0.load_state_dict(torch.load(model_save_path))
+#will use it when required
