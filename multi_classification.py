@@ -7,7 +7,8 @@ import numpy
 import sklearn
 from sklearn.datasets import make_blobs
 from sklearn.model_selection import train_test_split
-
+import torchmetrics 
+from torchmetrics import Accuracy
 num_class=4
 num_features=2
 
@@ -76,6 +77,8 @@ for epoch in range(epochs):
         loss_test= loss_fn(y_test_logits, y_test.to(device))
 print(f"training loss: {loss}, test loss: {loss_test}")
 print(f"training acc: {train_acc}, test acc: {test_acc}")
+
+#visulisation
 from helper import plot_decision_boundary
 plt.figure(figsize=(12,7))
 plt.subplot(1,2,1)#row , column , index
@@ -84,5 +87,7 @@ plot_decision_boundary(model_0, x_train, y_train)
 plt.subplot(1,2,2)
 plt.title("test")
 plot_decision_boundary(model_0, x_test,y_test)
-plt.show()
+#plt.show()
 
+torchmetrics_accuracy= Accuracy(task= 'multiclass', num_classes=4)
+print(torchmetrics_accuracy(y_test_pred.to("cpu"), y_test.to("cpu")))
