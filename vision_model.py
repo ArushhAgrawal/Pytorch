@@ -23,7 +23,7 @@ test_data=datasets.FashionMNIST(root="image_data",
 header= train_data.classes
 header_idx= train_data.class_to_idx
 print(f"header index: {header_idx}")
-images, labels= train_data[8]
+images, labels= train_data[0]
 print(f"image shape: {images.shape}")#colour channel, height, width 
 
 #visulisation
@@ -47,22 +47,58 @@ for i in range(1,r*c+1):
 #it converts our data from pytorch tensor to python itrable
 #we will convert our data to batch size (it will reduce the load on ram)
 train_dataloader= DataLoader(dataset=train_data,
-                             batch_size=32,
+                             batch_size=8,
                              shuffle=True)
 test_dataloader= DataLoader(dataset=test_data,
-                            batch_size=32,
+                            batch_size=8,
                             shuffle=True)
 print(f"loaded data: {train_dataloader}, {test_dataloader}")
 train_feature, train_label= next(iter(train_dataloader))
 test_feature, test_label= next(iter(test_dataloader))
 
-#build baseline model- a bseline model is a simple model we improve using subsiquent model/ experiments
+#making model
+class FashionModel(nn.Module):
+    def __init__ (self):
+        super().__init__()
+        self.layer_stack= nn.Sequential(nn.Flatten(),
+                                        nn.Linear(in_features=784, out_features= 512),
+                                        nn.ReLU(),
+                                        nn.Linear(in_features=512, out_features=256),
+                                        nn.ReLU(),
+                                        nn.Linear(in_features=256, out_features=128),
+                                        nn.ReLU(),
+                                        nn.Linear(in_features=128, out_features=64),
+                                        nn.ReLU(),
+                                        nn.Linear(in_features=64, out_features=10))
+    def forward(self,x):
+        return self.layer_stack(x)
 
-#creating a flatten layer
-flatten_model= nn.Flatten()
-#get a single sample
-x=train_feature
-x_flat= flatten_model(x)
-print(x_flat.shape)
-x_sq=torch.squeeze(x_flat).squeeze(1)
-print(x_sq)
+model=FashionModel()
+#setting up loss function and optimizer
+loss_fn= nn.CrossEntropyLoss()
+optimizer= torch.optim.Adam(params= model.parameters(),
+                            lr=0.1)
+#defining accuracy function
+def accuracy(y_pred, y_true):
+    correct= torch.eq(y_pred, y_true).sum()
+    acc= (correct/len(y_pred))*100
+    return acc
+
+#training and testing loop
+epochs=1000
+torch.manual_seed(32)
+for epoch in range(epochs):
+    model.train()
+    y_logits= model(train_feature)  
+    y_train_pred= torch.argmax(torch.softmax(y_logits, dim=1), dim=1)
+    loss_train= loss_fn(y_logits, train_label)  
+    optimizer.zero_grad()
+    loss_train.backward()
+    optimizer.step()
+
+    model.eval()
+    with torch.inference_mode():
+        y_test_logits=model(test_feature)
+        y_test_pred= torch.argmax(torch.softmax(y_test_logits,dim=1), dim=1)
+        loss_test= loss_fn(y_test_logits, test_label)
+print(f"training loss: {loss_train}, testing loss:{loss_test} ")
