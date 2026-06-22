@@ -47,10 +47,10 @@ for i in range(1,r*c+1):
 #it converts our data from pytorch tensor to python itrable
 #we will convert our data to batch size (it will reduce the load on ram)
 train_dataloader= DataLoader(dataset=train_data,
-                             batch_size=8,
+                             batch_size=32,
                              shuffle=True)
 test_dataloader= DataLoader(dataset=test_data,
-                            batch_size=8,
+                            batch_size=32,
                             shuffle=True)
 print(f"loaded data: {train_dataloader}, {test_dataloader}")
 train_feature, train_label= next(iter(train_dataloader))
@@ -77,7 +77,7 @@ model=FashionModel()
 #setting up loss function and optimizer
 loss_fn= nn.CrossEntropyLoss()
 optimizer= torch.optim.Adam(params= model.parameters(),
-                            lr=0.1)
+                            lr=0.001)
 #defining accuracy function
 def accuracy(y_pred, y_true):
     correct= torch.eq(y_pred, y_true).sum()
@@ -85,20 +85,24 @@ def accuracy(y_pred, y_true):
     return acc
 
 #training and testing loop
-epochs=1000
+epochs=3
 torch.manual_seed(32)
 for epoch in range(epochs):
     model.train()
-    y_logits= model(train_feature)  
-    y_train_pred= torch.argmax(torch.softmax(y_logits, dim=1), dim=1)
-    loss_train= loss_fn(y_logits, train_label)  
-    optimizer.zero_grad()
-    loss_train.backward()
-    optimizer.step()
-
+    for batch, (x,y) in enumerate(train_dataloader):
+        y_logits= model(x)  
+        y_train_pred= torch.argmax(torch.softmax(y_logits, dim=1), dim=1)
+        loss_train= loss_fn(y_logits, y)  
+        optimizer.zero_grad()
+        loss_train.backward()
+        optimizer.step()
+        acc_train= accuracy(y_pred= y_train_pred, y_true= y)
     model.eval()
     with torch.inference_mode():
-        y_test_logits=model(test_feature)
-        y_test_pred= torch.argmax(torch.softmax(y_test_logits,dim=1), dim=1)
-        loss_test= loss_fn(y_test_logits, test_label)
+        for batch, (x,y) in enumerate(test_dataloader):
+            y_test_logits=model(x)
+            y_test_pred= torch.argmax(torch.softmax(y_test_logits,dim=1), dim=1)
+            loss_test= loss_fn(y_test_logits, y)
+            acc_test= accuracy(y_pred= y_test_pred, y_true= y)
 print(f"training loss: {loss_train}, testing loss:{loss_test} ")
+print(f"training accuracy: {acc_train}, testing accuracy: {acc_test}")
