@@ -106,3 +106,24 @@ for epoch in range(epochs):
             acc_test= accuracy(y_pred= y_test_pred, y_true= y)
 print(f"training loss: {loss_train}, testing loss:{loss_test} ")
 print(f"training accuracy: {acc_train}, testing accuracy: {acc_test}")
+
+#make prediction and get model prediction
+def eval_model(model: torch.nn.Module,# this shows the type model is torcn.nn.MOdule its not a imp to write
+               data_loader: torch.utils.data.DataLoader,
+               loss_fn: torch.nn.Module,
+               accuracy):
+    loss, acc= 0,0
+    model.eval()
+    with torch.inference_mode():
+        for batch, (x, y) in enumerate(data_loader):
+            y_logits= model(x)
+            loss= loss_fn(y_logits,y)
+            acc= accuracy(y_true=y,y_pred= torch.argmax(y_logits,dim=1))
+            return loss.item(), acc.item()
+
+#testing
+model_testing=eval_model(model=model,
+                         data_loader=test_dataloader,
+                         loss_fn=loss_fn,
+                         accuracy=accuracy)    
+print(model_testing)    
